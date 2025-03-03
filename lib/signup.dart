@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'login.dart'; // Import the new login page
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -11,7 +12,7 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController(); // New email controller
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
@@ -45,7 +46,7 @@ class _SignupPageState extends State<SignupPage> {
       print('Checking Firebase Auth instance: ${_auth.app.name}');
       
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(), // Use email for Firebase Auth
+        email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
@@ -76,7 +77,7 @@ class _SignupPageState extends State<SignupPage> {
   @override
   void dispose() {
     _fullNameController.dispose();
-    _emailController.dispose(); // Dispose email controller
+    _emailController.dispose();
     _phoneNumberController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -285,8 +286,11 @@ class _SignupPageState extends State<SignupPage> {
             // Already registered? Log in link
             TextButton(
               onPressed: () {
-                // Navigate to login page (you'll need to create this)
-                Navigator.pop(context);
+                // Navigate to login page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
               },
               child: const Text(
                 'Already registered? Log in',
