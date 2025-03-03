@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Base href for Flutter web -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="safevoxx">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>safevoxx</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase JavaScript SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+
+  <!-- Firebase Configuration -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMY9PwfZ1XTMRudkZ4oWNtgwNTbFjvsb8",
+      authDomain: "soss-a2b8e.firebaseapp.com",
+      projectId: "soss-a2b8e",
+      storageBucket: "soss-a2b8e.firebasestorage.app",
+      messagingSenderId: "688634038320",
+      appId: "1:688634038320:web:fae9a7ffc78661df7c05f5"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+</head>
+<body>
+  <!-- Flutter bootstrap script -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
