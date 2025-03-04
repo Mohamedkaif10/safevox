@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:safevoxx/signup.dart'; // Import signup page for navigation
+import 'package:safevoxx/map.dart'; // Import map page for navigation
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -33,7 +34,12 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Login successful!')),
       );
-      Navigator.pop(context); // Return to home page after login
+      
+      // Navigate to MapPage after successful login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MapPage()),
+      );
     } catch (e) {
       print('Login failed with error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
