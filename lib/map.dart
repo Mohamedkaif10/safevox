@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:safevoxx/login.dart'; // Import login page for navigation if not authenticated
+import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart'; // Add this import
+import 'package:safevoxx/login.dart'; 
 import 'package:safevoxx/emergency_contact.dart';
 import 'package:safevoxx/voice_activation.dart';
 import 'package:safevoxx/recordings.dart';
+
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
@@ -16,38 +19,34 @@ class _MapPageState extends State<MapPage> {
   late GoogleMapController _mapController;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Initial position (you can fetch user's location dynamically)
-  static const LatLng _initialPosition =
-      LatLng(17.4125, 78.3254); // Hyderabad, India (example)
+  // Default initial position (fallback if location fails)
+  static const LatLng _defaultPosition = LatLng(17.4125, 78.3254);
+  LatLng? _currentPosition; // To store user's current location
 
-  // Markers for the map (based on your screenshot)
+  // Map Markers
   final Set<Marker> _markers = {
     Marker(
       markerId: MarkerId('cricket_ground'),
-      position: LatLng(17.4125, 78.3254), // SVM Gagan Sports Cricket Ground
+      position: LatLng(17.4125, 78.3254),
       infoWindow: InfoWindow(title: 'SVM Gagan Sports Cricket Ground'),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
     ),
     Marker(
       markerId: MarkerId('new_cricket_stadium'),
-      position:
-          LatLng(17.4150, 78.3300), // New Cricket Stadium (example position)
+      position: LatLng(17.4150, 78.3300),
       infoWindow: InfoWindow(title: 'New Cricket Stadium'),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
     ),
     Marker(
       markerId: MarkerId('sncc_iit_hyderabad'),
-      position:
-          LatLng(17.4100, 78.3200), // SNCC IIT Hyderabad (example position)
+      position: LatLng(17.4100, 78.3200),
       infoWindow: InfoWindow(title: 'SNCC IIT Hyderabad'),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
     ),
     Marker(
       markerId: MarkerId('iit_hyderabad'),
-      position:
-          LatLng(17.4100, 78.3200), // Indian Institute of Technology, Hyderabad
-      infoWindow:
-          InfoWindow(title: 'Indian Institute of Technology, Hyderabad'),
+      position: LatLng(17.4100, 78.3200),
+      infoWindow: InfoWindow(title: 'Indian Institute of Technology, Hyderabad'),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
     ),
   };
@@ -56,11 +55,80 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     _checkAuthStatus();
+    _requestPermissionsAndGetLocation();
+  }
+
+  // Function to request permissions and get current location
+  Future<void> _requestPermissionsAndGetLocation() async {
+    // Request permissions
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.camera,
+      Permission.microphone,
+      Permission.storage,
+      Permission.contacts,
+      Permission.notification,
+      Permission.location,
+    ].request();
+
+    // Check location permission specifically
+    if (await Permission.location.isGranted) {
+      await _getCurrentLocation();
+    } else if (await Permission.location.isDenied) {
+      _showPermissionDialog(Permission.location);
+    }
+
+    statuses.forEach((permission, status) {
+      if (status.isDenied && permission != Permission.location) {
+        _showPermissionDialog(permission);
+      }
+    });
+  }
+
+  // Function to fetch user's current location
+  Future<void> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      print("Error getting location: $e");
+      setState(() {
+        _currentPosition = _defaultPosition; // Fallback to default if location fails
+      });
+    }
+  }
+
+  // Show dialog if user denies permission
+  void _showPermissionDialog(Permission permission) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Permission Required'),
+        content: Text(
+          'This app requires ${permission.toString().split('.').last} permission to work properly. Please enable it in settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await openAppSettings();
+              Navigator.pop(context);
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _checkAuthStatus() {
     if (_auth.currentUser == null) {
-      // If no user is logged in, navigate to login page
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
           context,
@@ -79,16 +147,22 @@ class _MapPageState extends State<MapPage> {
   }
 
   @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Dark background to match your palette
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         title: Row(
           children: [
             Image.asset(
-              'assets/safevoxx_logo.png', // Replace with your logo asset path
+              'assets/safevoxx_logo.png',
               height: 30,
               width: 30,
             ),
@@ -99,7 +173,7 @@ class _MapPageState extends State<MapPage> {
         actions: [
           CircleAvatar(
             backgroundImage: NetworkImage(
-                'https://example.com/profile.jpg'), // Replace with actual user profile image
+                'https://example.com/profile.jpg'), // Replace with actual profile image
             radius: 15,
           ),
           const SizedBox(width: 10),
@@ -118,7 +192,6 @@ class _MapPageState extends State<MapPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // Drawer Header with Back Arrow
             Container(
               padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
               child: Row(
@@ -126,162 +199,90 @@ class _MapPageState extends State<MapPage> {
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                     onPressed: () {
-                      Navigator.pop(context); // Close the drawer
+                      Navigator.pop(context);
                     },
                   ),
                 ],
               ),
             ),
-            // Menu Items
             ListTile(
               leading: const Icon(Icons.person, color: Colors.grey),
-              title: const Text('My Profile',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text('My Profile', style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // Close drawer
-                // Add navigation or action for My Profile
+                Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.mic, color: Colors.grey),
-              title: const Text('Voice Activation',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text('Voice Activation', style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // Close drawer
-                // Add navigation or action for Voice Activation
+                Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => VoiceActivationPage()),
+                  MaterialPageRoute(builder: (context) => VoiceActivationPage()),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Icons.settings, color: Colors.grey),
-              title:
-                  const Text('Settings', style: TextStyle(color: Colors.white)),
+              title: const Text('Settings', style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // Close drawer
-                // Add navigation or action for Settings
+                Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.history, color: Colors.grey),
-              title:
-                  const Text('History', style: TextStyle(color: Colors.white)),
+              title: const Text('History', style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // Close drawer
-                // Add navigation or action for History
+                Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.add, color: Colors.grey),
-              title: const Text('Add Emergency Contacts',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text('Add Emergency Contacts', style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // Close drawer
+                Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => EmergencyContactPage()),
+                  MaterialPageRoute(builder: (context) => EmergencyContactPage()),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Icons.music_note, color: Colors.grey),
-              title: const Text('Recordings',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text('Recordings', style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // Close drawer
-                // Add navigation or action for Recordings
+                Navigator.pop(context);
                 Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RecordingsPage()),
-          );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.help, color: Colors.grey),
-              title: const Text('Help', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                // Add navigation or action for Help
+                  context,
+                  MaterialPageRoute(builder: (context) => RecordingsPage()),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.grey),
-              title:
-                  const Text('Logout', style: TextStyle(color: Colors.white)),
+              title: const Text('Logout', style: TextStyle(color: Colors.white)),
               onTap: () {
-                _logout(); // Logout and navigate to LoginPage
+                _logout();
               },
             ),
           ],
         ),
       ),
-      body: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: _initialPosition,
-          zoom: 14.0,
-        ),
-        markers: _markers,
-        onMapCreated: (GoogleMapController controller) {
-          _mapController = controller;
-        },
-        myLocationEnabled: true, // Show user's location if permission granted
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.black,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.home, color: Colors.white),
-              onPressed: () {
-                // Navigate to home (you can define this)
+      body: _currentPosition == null
+          ? const Center(child: CircularProgressIndicator()) // Show loading until location is fetched
+          : GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _currentPosition ?? _defaultPosition, // Use current position or fallback
+                zoom: 14.0,
+              ),
+              markers: _markers,
+              onMapCreated: (GoogleMapController controller) {
+                _mapController = controller;
               },
+              myLocationEnabled: true, // Shows user's location dot on the map
+              myLocationButtonEnabled: true, // Adds a button to center on user's location
             ),
-            IconButton(
-              icon: const Icon(Icons.local_dining, color: Colors.orange),
-              onPressed: () {
-                // Navigate to restaurants (optional)
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.local_gas_station, color: Colors.white),
-              onPressed: () {
-                // Navigate to petrol stations (optional)
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.hotel, color: Colors.white),
-              onPressed: () {
-                // Navigate to hotels (optional)
-              },
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // SOS action (e.g., send location to emergency contacts)
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('SOS activated!')),
-          );
-        },
-        backgroundColor: Colors.brown,
-        child: const Text(
-          'SOS',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
-  }
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
   }
 }

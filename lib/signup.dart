@@ -15,8 +15,9 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  bool _termsAgreed = false; // For the checkbox state
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  bool _termsAgreed = false; // Checkbox state
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -24,7 +25,23 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> _signUp() async {
     if (!_termsAgreed) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please agree to Terms and Conditions')),
+        SnackBar(
+          content: Text.rich(
+            TextSpan(
+              text: 'I agree ',
+              style: const TextStyle(color: Colors.white), // "I agree" in white
+              children: [
+                TextSpan(
+                  text: 'Terms and Conditions',
+                  style: const TextStyle(
+                    color: Colors.green, // "Terms and Conditions" in green
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
       return;
     }
@@ -36,22 +53,13 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    print('Signup button pressed');
-    print('Full Name: ${_fullNameController.text}');
-    print('Email: ${_emailController.text}');
-    print('Phone Number: ${_phoneNumberController.text}');
-    print('Password: ${_passwordController.text}');
-    
     try {
-      print('Checking Firebase Auth instance: ${_auth.app.name}');
-      
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      print('User created: ${userCredential.user?.uid}');
-      
       String uid = userCredential.user!.uid;
       await _firestore.collection('users').doc(uid).set({
         'fullName': _fullNameController.text.trim(),
@@ -60,14 +68,11 @@ class _SignupPageState extends State<SignupPage> {
         'createdAt': Timestamp.now(),
       });
 
-      print('Firestore data saved');
-      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign up successful!')),
       );
       Navigator.pop(context);
     } catch (e) {
-      print('Signup failed with error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -75,23 +80,13 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   @override
-  void dispose() {
-    _fullNameController.dispose();
-    _emailController.dispose();
-    _phoneNumberController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Dark background
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Sign Up'),
-        backgroundColor: Colors.black, // Match background color
-        foregroundColor: Colors.white, // White text for app bar
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -111,139 +106,39 @@ class _SignupPageState extends State<SignupPage> {
               'Register to enhance your personal safety',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white70,
+                color: Colors.white, // Changed to pure white (#FFFFFF)
               ),
             ),
             const SizedBox(height: 30),
+
             // Full Name Field
-            TextField(
-              controller: _fullNameController,
-              decoration: InputDecoration(
-                labelText: 'Enter Your full name',
-                labelStyle: const TextStyle(color: Colors.white70),
-                prefixIcon: const Icon(Icons.person, color: Colors.white70),
-                border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                fillColor: Colors.grey[800],
-                filled: true,
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
+            _buildTextField(
+                _fullNameController, 'Enter Your full name', Icons.person),
             const SizedBox(height: 16),
+
             // Email Field
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Your Email',
-                labelStyle: const TextStyle(color: Colors.white70),
-                prefixIcon: const Icon(Icons.email, color: Colors.white70),
-                border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                fillColor: Colors.grey[800],
-                filled: true,
-              ),
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(color: Colors.white),
-            ),
+            _buildTextField(_emailController, 'Your Email', Icons.email,
+                isEmail: true),
             const SizedBox(height: 16),
+
             // Phone Number Field
-            TextField(
-              controller: _phoneNumberController,
-              decoration: InputDecoration(
-                labelText: 'Your Phone number',
-                labelStyle: const TextStyle(color: Colors.white70),
-                prefixIcon: const Icon(Icons.phone, color: Colors.white70),
-                border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                fillColor: Colors.grey[800],
-                filled: true,
-              ),
-              keyboardType: TextInputType.phone,
-              style: const TextStyle(color: Colors.white),
-            ),
+            _buildTextField(
+                _phoneNumberController, 'Your Phone number', Icons.phone,
+                isPhone: true),
             const SizedBox(height: 16),
+
             // Password Field
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Create a password',
-                labelStyle: const TextStyle(color: Colors.white70),
-                prefixIcon: const Icon(Icons.lock, color: Colors.white70),
-                border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                fillColor: Colors.grey[800],
-                filled: true,
-              ),
-              obscureText: true,
-              style: const TextStyle(color: Colors.white),
-            ),
+            _buildTextField(
+                _passwordController, 'Create a password', Icons.lock,
+                isPassword: true),
             const SizedBox(height: 16),
+
             // Confirm Password Field
-            TextField(
-              controller: _confirmPasswordController,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                labelStyle: const TextStyle(color: Colors.white70),
-                prefixIcon: const Icon(Icons.lock, color: Colors.white70),
-                border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                fillColor: Colors.grey[800],
-                filled: true,
-              ),
-              obscureText: true,
-              style: const TextStyle(color: Colors.white),
-            ),
+            _buildTextField(
+                _confirmPasswordController, 'Confirm Password', Icons.lock,
+                isPassword: true),
             const SizedBox(height: 20),
+
             // Terms and Conditions Checkbox
             Row(
               children: [
@@ -257,19 +152,30 @@ class _SignupPageState extends State<SignupPage> {
                   activeColor: Colors.green,
                   checkColor: Colors.black,
                 ),
-                const Text(
-                  'I agree with Terms and conditions',
-                  style: TextStyle(color: Colors.white70),
+                GestureDetector(
+                  onTap: () {
+                    // Navigate to Terms and Conditions page (if available)
+                    print('Terms and Conditions Clicked');
+                  },
+                  child: const Text(
+                    'I agree with Terms and Conditions',
+                    style: TextStyle(
+                      color: Color(0xFF559C62), // Green text
+                      decoration: TextDecoration.underline, // Underline
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
+
             // Sign Up Button
             ElevatedButton(
               onPressed: _signUp,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.green,
+                backgroundColor:
+                    const Color(0xFF559C62), // Changed button color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -278,11 +184,12 @@ class _SignupPageState extends State<SignupPage> {
                 'Sign Up',
                 style: TextStyle(
                   fontSize: 18,
-                  color: Colors.black,
+                  color: Colors.white, // Changed to pure white
                 ),
               ),
             ),
             const SizedBox(height: 16),
+
             // Already registered? Log in link
             TextButton(
               onPressed: () {
@@ -292,18 +199,63 @@ class _SignupPageState extends State<SignupPage> {
                   MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               },
-              child: const Text(
-                'Already registered? Log in',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.green,
-                  decoration: TextDecoration.underline,
+              child: const Text.rich(
+                TextSpan(
+                  text: 'Already registered? ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white, // "Already registered?" in white
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Log in',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.green, // "Log in" in green
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon,
+      {bool isPassword = false, bool isEmail = false, bool isPhone = false}) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        prefixIcon: Icon(icon, color: Colors.white70),
+        border: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        fillColor: Colors.grey[800],
+        filled: true,
+      ),
+      style: const TextStyle(color: Colors.white),
+      keyboardType: isEmail
+          ? TextInputType.emailAddress
+          : isPhone
+              ? TextInputType.phone
+              : TextInputType.text,
+      obscureText: isPassword,
     );
   }
 }

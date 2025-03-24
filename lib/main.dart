@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:safevoxx/firebase_options.dart';
 import 'signup.dart';
 
@@ -39,68 +40,69 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black, // Dark background as in the screenshot
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo
-            Image.asset(
-              'assets/entry_logo.png', // Load the logo from assets
-              height: 100, // Adjust size as needed
-              width: 100,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Spacer(),
+          // Logo
+          Image.asset(
+            'assets/entry_logo.png', // Load the logo from assets
+            height: 100, // Adjust size as needed
+            width: 100,
+          ),
+          SizedBox(height: 16),
+          // App name
+          Text(
+            'SafeVox',
+            style: GoogleFonts.mulish(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
             ),
-            SizedBox(height: 16),
-            // App name
-            Text(
-              'SafeVoxx',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          SizedBox(height: 8),
+          // Tagline
+          Text(
+            'Your Safety, Your Voice',
+            style: GoogleFonts.mulish(
+              color: Colors.white70,
+              fontSize: 16,
             ),
-            SizedBox(height: 8),
-            // Tagline
-            Text(
-              'Your Safety, Your Voice',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 40), // Space between tagline and button
-            // Get Started button
-            SizedBox(
-              width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SignupPage()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // Button color
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+          ),
+          Spacer(),
+          // Get Started button
+          SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SignupPage()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF559C62), // Updated button color
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text(
-                    'Get Started',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                ),
+                child: Text(
+                  'Get Started',
+                  style: GoogleFonts.mulish(
+                    color: Colors.white,
+                    fontSize: 40, // Updated text size
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+          SizedBox(height: 40), // Increased space at the bottom
+        ],
       ),
     );
   }
